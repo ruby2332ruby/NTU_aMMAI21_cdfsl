@@ -1,3 +1,10 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1" #multi gpu: "0,1"
+print("CUDA_VISIBLE_DEVICES 1")
+
+### my code ###
+import csv
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -42,6 +49,11 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
             outfile = os.path.join(params.checkpoint_dir, '{:d}.tar'.format(epoch))
             torch.save({'epoch':epoch, 'state':model.state_dict()}, outfile)
         
+    ### my code ###
+    out_record_file = os.path.join(params.checkpoint_dir, 'record.csv')
+    with open(out_record_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(model.record_list)
     return model
 
 if __name__=='__main__':

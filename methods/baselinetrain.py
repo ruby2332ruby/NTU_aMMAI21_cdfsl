@@ -22,6 +22,9 @@ class BaselineTrain(nn.Module):
         self.num_class = num_class
         self.loss_fn = nn.CrossEntropyLoss()
         self.top1 = utils.AverageMeter()
+        
+        ### my code ###
+        self.record_list = [["Epoch", "Batch", "Loss", "Top1 Val", "Top1 Avg"]]
 
     def forward(self,x):
         x    = Variable(x.cuda())
@@ -53,6 +56,9 @@ class BaselineTrain(nn.Module):
             if i % print_freq==0:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
                 print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f} | Top1 Val {:f} | Top1 Avg {:f}'.format(epoch, i, len(train_loader), avg_loss/float(i+1), self.top1.val, self.top1.avg))
+                
+                ### my code ###
+                self.record_list.append([epoch, i, avg_loss/float(i+1), self.top1.val, self.top1.avg])
                      
     def test_loop(self, val_loader):
         return -1 #no validation, just save model during iteration
