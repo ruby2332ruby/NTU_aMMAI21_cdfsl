@@ -17,7 +17,10 @@ class MetaTemplate(nn.Module):
         self.feat_dim   = self.feature.final_feat_dim
         self.change_way = change_way  #some methods allow different_way classification during training and test
         self.device     = device
-
+        
+        ### my code ###
+        self.record_list = [["Epoch", "Batch", "Loss"]]
+        self.test_list = [["iter_num", "acc_mean", "+/-"]]
     @abstractmethod
     def set_forward(self,x,is_feature):
         pass
@@ -69,6 +72,9 @@ class MetaTemplate(nn.Module):
             if i % print_freq==0:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
                 print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f}'.format(epoch, i, len(train_loader), avg_loss/float(i+1)))
+                
+                ### my code ###
+                self.record_list.append([epoch, i, avg_loss/float(i+1)])
 
     def test_loop(self, test_loader, record = None):
         correct =0
@@ -87,6 +93,8 @@ class MetaTemplate(nn.Module):
         acc_mean = np.mean(acc_all)
         acc_std  = np.std(acc_all)
         print('%d Test Acc = %4.2f%% +- %4.2f%%' %(iter_num,  acc_mean, 1.96* acc_std/np.sqrt(iter_num)))
+        ### my code ###
+        self.record_list.append([iter_num, acc_mean, 1.96* acc_std/np.sqrt(iter_num)])
 
         return acc_mean
 

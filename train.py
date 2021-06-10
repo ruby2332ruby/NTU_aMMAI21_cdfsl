@@ -51,9 +51,18 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
         
     ### my code ###
     out_record_file = os.path.join(params.checkpoint_dir, 'record.csv')
+    if params.task in ["cdfsl-multi"] and os.path.isfile(out_record_file):
+        out_record_file = os.path.join(params.checkpoint_dir, 'record2.csv')
     with open(out_record_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(model.record_list)
+    if params.method in ['protonet']:
+        out_test_file = os.path.join(params.checkpoint_dir, 'record_test.csv')
+        if params.task in ["cdfsl-multi"] and os.path.isfile(out_record_file):
+            out_record_file = os.path.join(params.checkpoint_dir, 'record_test2.csv')
+        with open(out_record_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows(model.test_list)
     return model
 
 if __name__=='__main__':
