@@ -20,6 +20,7 @@ import backbone
 
 from methods.baselinetrain import BaselineTrain
 from methods.protonet import ProtoNet
+from methods.domainclassifier import DomainClassifier
 
 from io_utils import model_dict, parse_args, get_resume_file  
 from datasets import miniImageNet_few_shot, cifar100_few_shot
@@ -30,10 +31,20 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
     else:
        raise ValueError('Unknown optimization, please define by yourself')     
 
+    if  params.dann: #True goes in
+        model_domain = DomainClassifier()
+        model_domain = model_domain.cuda()
+        optimizer_domain = torch.optim.Adam(model_domain.parameters())
+    
     max_acc = 0
     for epoch in range(start_epoch,stop_epoch):
-        model.train()
-        model.train_loop(epoch, base_loader,  optimizer ) 
+        if  params.dann: #True goes in
+            model_domain.train()
+            model.train()
+            model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain )
+        else:
+            model.train()
+            model.train_loop(epoch, base_loader,  optimizer )
 
         if not os.path.isdir(params.checkpoint_dir):
             os.makedirs(params.checkpoint_dir)
@@ -63,6 +74,8 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
         with open(out_test_file, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(model.test_list)
+    ### my code ###
+    
     return model
 
 if __name__=='__main__':
@@ -128,6 +141,9 @@ if __name__=='__main__':
     params.checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(save_dir, task_path, params.model, params.method)
     if params.train_aug:
         params.checkpoint_dir += '_aug'
+        
+    if params.dann: #True goes in
+        params.checkpoint_dir += '_dann'
 
     if not params.method  in ['baseline', 'baseline++']: 
         params.checkpoint_dir += '_%dway_%dshot' %( params.train_n_way, params.n_shot)
@@ -140,6 +156,10 @@ if __name__=='__main__':
 
     if task in ["fsl", "cdfsl-single"]:
         model = train(base_loaders[0], val_loaders[0], model, optimization, start_epoch, stop_epoch, params)
+    ### my code ###
+    elif params.dann: #True goes in
+        model = train(base_loaders, val_loaders, model, optimization, start_epoch, stop_epoch, params)
+    ### my code ###
     else:
         stop_epoch = stop_epoch // 2
         for i in range(2):

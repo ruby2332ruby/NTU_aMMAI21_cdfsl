@@ -27,6 +27,11 @@ def parse_args(script):
         parser.add_argument('--save_freq'   , default=50, type=int, help='Save frequency')
         parser.add_argument('--start_epoch' , default=0, type=int,help ='Starting epoch')
         parser.add_argument('--stop_epoch'  , default=100, type=int, help ='Stopping epoch') # for meta-learning methods, each epoch contains 100 episodes
+        
+        ### my code ###
+        parser.add_argument('--dann'        , default=False, type=bool, help ='Training with our own multi-source training method: Modified DaNN')
+        ### my code ###
+        
     elif script == "test":
         parser.add_argument('--finetune'   , action='store_true', help='finetune the few-shot model or not') 
         parser.add_argument('--freeze_backbone', action='store_true', help='finetune the pretrained backbone model or not') 
