@@ -94,7 +94,7 @@ class MetaTemplate(nn.Module):
         acc_std  = np.std(acc_all)
         print('%d Test Acc = %4.2f%% +- %4.2f%%' %(iter_num,  acc_mean, 1.96* acc_std/np.sqrt(iter_num)))
         ### my code ###
-        self.record_list.append([iter_num, acc_mean, 1.96* acc_std/np.sqrt(iter_num)])
+        self.test_list.append([iter_num, acc_mean, 1.96* acc_std/np.sqrt(iter_num)])
 
         return acc_mean
 
