@@ -186,7 +186,7 @@ class MetaTemplate(nn.Module):
             #feature = self.feature.forward(mixed_data)
             # We don't need to train feature extractor in step 1.
             # Thus we detach the feature neuron to avoid backpropgation.
-            domain_logits = model_domain.forward(mixed_feature.detach())
+            domain_logits = model_domain.forward(mixed_feature)
             z1_support   = z1_support.contiguous()
             z2_support   = z2_support.contiguous()
             z1_proto     = z1_support.view(self.n_way, self.n_support, -1 ).mean(1) #the shape of z is [n_data, n_dim]
