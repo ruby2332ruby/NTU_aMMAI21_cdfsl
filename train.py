@@ -58,10 +58,16 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
             max_acc = acc
             outfile = os.path.join(params.checkpoint_dir, 'best_model.tar')
             torch.save({'epoch':epoch, 'state':model.state_dict()}, outfile)
+            if  params.dann: #True goes in
+                outfile = os.path.join(params.checkpoint_dir, 'best_model_domain.tar')
+                torch.save({'epoch':epoch, 'state':model_domain.state_dict()}, outfile)
 
         if (epoch % params.save_freq==0) or (epoch==stop_epoch-1):
             outfile = os.path.join(params.checkpoint_dir, '{:d}.tar'.format(epoch))
             torch.save({'epoch':epoch, 'state':model.state_dict()}, outfile)
+            if  params.dann: #True goes in
+                outfile = os.path.join(params.checkpoint_dir, '{:d}_domain.tar'.format(epoch))
+                torch.save({'epoch':epoch, 'state':model_domain.state_dict()}, outfile)
         
     ### my code ###
     out_record_file = os.path.join(params.checkpoint_dir, 'record.csv')
