@@ -33,7 +33,7 @@ def parse_args(script):
         
     elif script == "test":
         parser.add_argument('--finetune'   , action='store_true', help='finetune the few-shot model or not') 
-        parser.add_argument('--freeze_backbone', action='store_true', help='finetune the pretrained backbone model or not') 
+        parser.add_argument('--freeze_backbone', action='store_true', help='finetune the pretrained backbone model or not')
     else:
        raise ValueError('Unknown script')
         

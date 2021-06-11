@@ -1,3 +1,7 @@
+mport os
+os.environ["CUDA_VISIBLE_DEVICES"] = "2" #multi gpu: "0,1"
+print("CUDA_VISIBLE_DEVICES 2")
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -39,6 +43,8 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
         checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(configs.save_dir, task_path, params.model, params.method)
         if params.train_aug:
             checkpoint_dir += '_aug'
+        if params.dann: #True goes in
+            checkpoint_dir += '_dann'
         checkpoint_dir += '_5way_5shot'
 
         params.save_iter = -1
