@@ -112,3 +112,6 @@ class BaselineTrain(nn.Module):
                 print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f} | Domain Loss {:f} | Top1 Val {:f} | Top1 Avg {:f}'.format(epoch, i, batch_num_mul, avg_loss/float(i+1), avg_loss_domain/float(i+1), self.top1.val, self.top1.avg))
                 
                 self.record_list.append([epoch, i, avg_loss/float(i+1), avg_loss_domain/float(i+1), self.top1.val, self.top1.avg])
+                
+    def test_loop_dann(self, val_loader):
+        return -1 #no validation, just save model during iteration

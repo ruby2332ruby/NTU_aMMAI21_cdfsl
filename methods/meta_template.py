@@ -132,3 +132,52 @@ class MetaTemplate(nn.Module):
 
         scores = linear_clf(z_query)
         return scores
+
+    ### my code ###
+    #model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain )
+    def train_loop_dann(self, epoch, train_loader, optimizer, optimizer_domain, model_domain):
+        print_freq = 10
+        avg_loss=0
+        avg_loss_domain=0
+        lamb = 0.7
+        self.record_list = [["Epoch", "Batch", "Loss", "Domain Loss"]]
+        for i, ((x1, y1), (x2, y2)) in enumerate(zip(train_loader[0], train_loader[1])):
+            x1 = Variable(x1.cuda())
+            y1 = Variable(y1.cuda())
+            x2 = Variable(x2.cuda())
+            y2 = Variable(y2.cuda())
+            
+            optimizer.zero_grad()
+            optimizer_domain.zero_grad()
+            
+            # step1: train domain classifier
+            mixed_data, mixed_label, domain_label = model_domain.mix_data(x1, x2, y1, y2)
+            feature = self.feature.forward(mixed_data)
+            # We don't need to train feature extractor in step 1.
+            # Thus we detach the feature neuron to avoid backpropgation.
+            domain_logits = model_domain.forward(feature.detach())
+            loss = model_domain.loss_fn(domain_logits, domain_label)
+            avg_loss_domain = avg_loss_domain+loss.item()
+            loss.backward()
+            optimizer_domain.step()
+            
+            # step 2 : train feature extractor and label classifier
+            class_logits = self.classifier.forward(feature)
+            _, predicted = torch.max(class_logits.data, 1)
+            correct = predicted.eq(mixed_label.data).cpu().sum()
+            self.top1.update(correct.item()*100 / (mixed_label.size(0)+0.0), mixed_label.size(0))
+            domain_logits = model_domain.forward(feature)
+            # loss = cross entropy of classification - lamb * domain binary cross entropy.
+            #  The reason why using subtraction is similar to generator loss in disciminator of GAN
+            loss = self.loss_fn(class_logits, mixed_label) - lamb * model_domain.loss_fn(domain_logits, domain_label)
+            avg_loss = avg_loss+loss.item()
+            loss.backward()
+            optimizer.step()
+            
+            if i % print_freq==0:
+                #print(optimizer.state_dict()['param_groups'][0]['lr'])
+                batch_num_mul = min(len(train_loader[0]), len(train_loader[1]))
+                batch_num_mul = batch_num_mul//10 *10
+                print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f} | Domain Loss {:f} | Top1 Val {:f} | Top1 Avg {:f}'.format(epoch, i, batch_num_mul, avg_loss/float(i+1), avg_loss_domain/float(i+1), self.top1.val, self.top1.avg))
+                
+                self.record_list.append([epoch, i, avg_loss/float(i+1), avg_loss_domain/float(i+1), self.top1.val, self.top1.avg])

@@ -21,16 +21,15 @@ def parse_args(script):
     parser.add_argument('--task'   , default='fsl', help='[fsl, cdfsl-single, cdfsl-multi]') 
     parser.add_argument('--models_to_use', '--names-list', nargs='+', default=['miniImageNet'], help='pretained model to use')
     parser.add_argument('--fine_tune_all_models'   , action='store_true',  help='fine-tune each model before selection') #still required for save_features.py and test.py to find the model path correctly
+    ### my code ###
+    parser.add_argument('--dann'        , default=False, type=bool, help ='Training with our own multi-source training method: Modified DaNN')
+    ### my code ###
 
     if script == 'train':
         parser.add_argument('--num_classes' , default=200, type=int, help='total number of classes in softmax, only used in baseline') #make it larger than the maximum label value in base class
         parser.add_argument('--save_freq'   , default=50, type=int, help='Save frequency')
         parser.add_argument('--start_epoch' , default=0, type=int,help ='Starting epoch')
         parser.add_argument('--stop_epoch'  , default=100, type=int, help ='Stopping epoch') # for meta-learning methods, each epoch contains 100 episodes
-        
-        ### my code ###
-        parser.add_argument('--dann'        , default=False, type=bool, help ='Training with our own multi-source training method: Modified DaNN')
-        ### my code ###
         
     elif script == "test":
         parser.add_argument('--finetune'   , action='store_true', help='finetune the few-shot model or not') 
