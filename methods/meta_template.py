@@ -135,7 +135,7 @@ class MetaTemplate(nn.Module):
 
     ### my code ###
     #model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain )
-    def train_loop_dann(self, epoch, train_loader, optimizer, optimizer_domain, model_domain):
+    def train_loop_dann(self, epoch, train_loader, optimizer, optimizer_domain, model_domain, dann_link):
         print_freq = 10
         avg_loss=0
         avg_loss_domain=0
@@ -158,7 +158,11 @@ class MetaTemplate(nn.Module):
             y1_query = Variable(y1_query.cuda())
             y2_query = torch.from_numpy(np.repeat(range( self.n_way ), self.n_query ))
             y2_query = Variable(y1_query.cuda())
-            mixed_y_query = torch.cat([y1_query, y2_query], dim=0)
+            if dann_link in ["concate"]:
+                mixed_y_query = torch.cat([y1_query, y2_query], dim=0)
+            elif dann_link in ["parallel"]:
+                mixed_y_query = torch.from_numpy(np.repeat(range( self.n_way*2 ), self.n_query ))
+                mixed_y_query = Variable(mixed_y_query.cuda())
             # turn x into frature z by feature extractor
             z1_support, z1_query  = self.parse_feature(x1,is_feature)
             z2_support, z2_query  = self.parse_feature(x2,is_feature)
@@ -191,7 +195,10 @@ class MetaTemplate(nn.Module):
             z2_support   = z2_support.contiguous()
             z1_proto     = z1_support.view(self.n_way, self.n_support, -1 ).mean(1) #the shape of z is [n_data, n_dim]
             z2_proto     = z2_support.view(self.n_way, self.n_support, -1 ).mean(1) #the shape of z is [n_data, n_dim]
-            mixed_z_proto = (z1_proto + z2_proto) / 2
+            if dann_link in ["concate"]:
+                mixed_z_proto = (z1_proto + z2_proto) / 2
+            elif dann_link in ["parallel"]:
+                mixed_z_proto = torch.cat([z1_proto, z2_proto], dim=0)
             z1_query     = z1_query.contiguous().view(self.n_way* self.n_query, -1 )
             z2_query     = z2_query.contiguous().view(self.n_way* self.n_query, -1 )
             dists1 = euclidean_dist_meta(z1_query, mixed_z_proto)

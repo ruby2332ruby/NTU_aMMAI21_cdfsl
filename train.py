@@ -41,7 +41,7 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
         if params.dann: #True goes in
             model_domain.train()
             model.train()
-            model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain )
+            model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain, params.dann_link )
         else:
             model.train()
             model.train_loop(epoch, base_loader,  optimizer )
@@ -152,8 +152,9 @@ if __name__=='__main__':
         params.checkpoint_dir += '_aug'
         
     if params.dann: #True goes in
-        params.checkpoint_dir += '_dann'
-
+        params.checkpoint_dir += '_dann_'
+        params.checkpoint_dir += params.dann_link
+        
     if not params.method  in ['baseline', 'baseline++']: 
         params.checkpoint_dir += '_%dway_%dshot' %( params.train_n_way, params.n_shot)
 

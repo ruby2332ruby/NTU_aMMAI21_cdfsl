@@ -1,4 +1,4 @@
-mport os
+import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "2" #multi gpu: "0,1"
 print("CUDA_VISIBLE_DEVICES 2")
 
@@ -44,7 +44,8 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
         if params.train_aug:
             checkpoint_dir += '_aug'
         if params.dann: #True goes in
-            checkpoint_dir += '_dann'
+            checkpoint_dir += '_dann_'
+            params.checkpoint_dir += params.dann_link
         checkpoint_dir += '_5way_5shot'
 
         params.save_iter = -1
