@@ -23,6 +23,7 @@ def parse_args(script):
     parser.add_argument('--fine_tune_all_models'   , action='store_true',  help='fine-tune each model before selection') #still required for save_features.py and test.py to find the model path correctly
     ### my code ###
     parser.add_argument('--dann'        , default=False, type=bool, help ='Training with our own multi-source training method: Modified DaNN')
+    parser.add_argument('--dann_link'        , default='concate', help='[concate, parallel]')
     ### my code ###
 
     if script == 'train':
@@ -30,7 +31,6 @@ def parse_args(script):
         parser.add_argument('--save_freq'   , default=50, type=int, help='Save frequency')
         parser.add_argument('--start_epoch' , default=0, type=int,help ='Starting epoch')
         parser.add_argument('--stop_epoch'  , default=100, type=int, help ='Stopping epoch') # for meta-learning methods, each epoch contains 100 episodes
-        parser.add_argument('--dann_link'        , default='concate', help='[concate, parallel]')
         
     elif script == "test":
         parser.add_argument('--finetune'   , action='store_true', help='finetune the few-shot model or not') 
