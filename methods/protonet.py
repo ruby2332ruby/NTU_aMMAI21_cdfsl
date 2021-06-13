@@ -91,7 +91,17 @@ class ProtoNet(MetaTemplate):
         x_hat = self.decoder.forward(z_all)
         loss  = self.autoencoder_criterion(x_hat, x)
         return loss
-
+    
+    def set_loss_meanANDcenter(self, x):
+        is_feature = True
+        z_support, z_query  = self.parse_feature(x,is_feature)
+        z_support   = z_support.contiguous().view(self.n_way, self.n_support, -1 )
+        z_proto     = z_support.view(self.n_way, self.n_support, -1 ).mean(1) #the shape of z is [n_data, n_dim]
+        z_query     = z_query.contiguous().view(self.n_way, self.n_query, -1 )
+        dist_mean = mean_dist(z_support, z_proto, z_query)
+        dis_center = center_dist(z_support, z_proto)
+        total_loss = dist_mean + dis_center
+        return total_loss
 
     def set_forward_loss(self, x):
         y_query = torch.from_numpy(np.repeat(range( self.n_way ), self.n_query ))
@@ -99,8 +109,8 @@ class ProtoNet(MetaTemplate):
 
         # scores = self.set_forward(x)
         # loss = self.loss_fn(scores, y_query)
-        loss = self.set_loss_decoder(x)
-
+        # loss = self.set_loss_decoder(x)
+        loss = self.set_loss_meanANDcenter(x)
         return loss
 
 def euclidean_dist( x, y):
@@ -114,4 +124,41 @@ def euclidean_dist( x, y):
     x = x.unsqueeze(1).expand(n, m, d)
     y = y.unsqueeze(0).expand(n, m, d)
 
-    return torch.pow(x - y, 2).sum(2) # N x M
+    return torch.pow(x - y, 2).sum(2) # N x M x D -> N x M
+
+def mean_dist(z_support, z_proto, z_query):
+    # F: dim of encoded feature
+    # z_support: 5 x 5 x F
+    # z_proto: 5 x F
+    # z_query: 5 x 16 x F
+    n_way = z_support.size(0)
+    n_support = z_support.size(1)
+    n_query = z_query.size(1)
+    n_F = z_support.size(2)
+    # distance between z_support and z_query
+    z_support_1 = z_support.unsqueeze(2).expand(n_way, n_support, n_query, n_F) # 5 x 5 x 16 x F
+    z_query_1 = z_query.unsqueeze(1).expand(n_way, n_support, n_query, n_F) # 5 x 5 x 16 x F
+    dis_sq = torch.pow(z_support_1 - z_query_1, 2).sum(2).sum(1) # 5 x 5 x 16 x F -> 5 x 5 x F -> 5 x F
+    dis_sq = dis_sq/n_support #5 x F
+    dis_sq = dis_sq/n_query #5 x F
+    # distance between z_proto and z_query
+    z_proto_2 = z_proto.unsqueeze(1).expand(n_way, n_query, n_F) # 5 x 16 x F
+    dis_pq = torch.pow(z_proto_2 - z_query, 2).sum(1) # 5 x 16 x F -> 5 x F
+    dis_pq = dis_pq/n_query #5 x F
+    # mean_dist
+    dis_mean = torch.pow(dis_sq - dis_pq, 2).sum(1).sum(0) # 5 x F -> 5 -> 1
+    return dis_mean
+
+def center_dist(z_support, z_proto):
+    # F: dim of encoded feature
+    # z_support: 5 x 5 x F
+    # z_proto: 5 x F
+    n_way = z_support.size(0)
+    n_support = z_support.size(1)
+    n_F = z_support.size(2)
+    # distance between z_support and z_proto
+    z_proto = z_proto.unsqueeze(1).expand(n_way, n_support, n_F) # 5 x 5 x F
+    dis_center = torch.pow(z_support - z_proto, 2).sum(2).sum(1).sum(0) # 5 x 5 x F-> 5 x 5 -> 5 -> 1
+    dis_center = dis_center/n_support #5 x F
+    return dis_center
+    

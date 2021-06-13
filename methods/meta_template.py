@@ -145,7 +145,8 @@ class MetaTemplate(nn.Module):
         lamb = (2 / (1+exp(-gam*progress))) -1
         lamb_set_forward = 0.0 # portion of set_forward_loss loss
         is_feature = False
-        self.record_list = [["Epoch", "Batch", "Loss", "Domain Loss"]]
+        if epoch == 0:
+            self.record_list = [["Epoch", "Batch", "Loss", "Domain Loss"]]
         for i, ((x1, _), (x2, _)) in enumerate(zip(train_loader[0], train_loader[1])):
             x1 = Variable(x1.cuda())
             x2 = Variable(x2.cuda())
@@ -165,9 +166,11 @@ class MetaTemplate(nn.Module):
             if dann_link in ["concate"]:
                 mixed_y_query = torch.cat([y1_query, y2_query], dim=0)
             elif dann_link in ["parallel"]:
+                ### 06/14 ###
                 mixed_y_query = torch.from_numpy(np.repeat(range( self.n_way*2 ), self.n_query ))
                 mixed_y_query = Variable(mixed_y_query.cuda())
-            # turn x into frature z by feature extractor
+                ### 06/14 ###
+            # turn x into feature z by feature extractor
             z1_support, z1_query  = self.parse_feature(x1,is_feature)
             z2_support, z2_query  = self.parse_feature(x2,is_feature)
             z1 = torch.cat([z1_support.contiguous().view( self.n_way * self.n_support, *z1_support.size()[2:]), z1_query.contiguous().view( self.n_way * self.n_query, *z1_query.size()[2:])], dim=0)
@@ -205,18 +208,30 @@ class MetaTemplate(nn.Module):
                 mixed_z_proto = torch.cat([z1_proto, z2_proto], dim=0)
             z1_query     = z1_query.contiguous().view(self.n_way* self.n_query, -1 )
             z2_query     = z2_query.contiguous().view(self.n_way* self.n_query, -1 )
-            dists1 = euclidean_dist_meta(z1_query, mixed_z_proto)
-            dists2 = euclidean_dist_meta(z2_query, mixed_z_proto)
+            ### 06/14 ###
+            if dann_link in ["concate"]:
+                dists1 = euclidean_dist_meta(z1_query, mixed_z_proto)
+                dists2 = euclidean_dist_meta(z2_query, mixed_z_proto)
+            elif dann_link in ["parallel"]:
+                dists1 = euclidean_dist_meta(z1_query, z1_proto)
+                dists2 = euclidean_dist_meta(z1_query, z2_proto)
+            ### 06/14 ###
             scores1 = -dists1
             scores2 = -dists2
             mixed_scores = torch.cat([scores1, scores2], dim=0)
             # compute loss
-            _, predicted = torch.max(mixed_scores.data, 1)
-            correct = predicted.eq(mixed_y_query.data).cpu().sum()
+            #_, predicted = torch.max(mixed_scores.data, 1)
+            #correct = predicted.eq(mixed_y_query.data).cpu().sum()
             # loss = cross entropy of classification - lamb * domain binary cross entropy.
             #  The reason why using subtraction is similar to generator loss in disciminator of GAN
             loss_set_forward = self.set_forward_loss(x1) + self.set_forward_loss(x2)
-            loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            ### 06/14 ###
+            #loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            if dann_link in ["concate"]:
+                loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            elif dann_link in ["parallel"]:
+                loss = self.loss_fn(scores1, y1_query) + self.loss_fn(scores2, y2_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            ### 06/14 ###
             
             avg_loss = avg_loss+loss.item()
             loss.backward()
