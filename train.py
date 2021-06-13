@@ -50,8 +50,11 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
             os.makedirs(params.checkpoint_dir)
 
         if params.dann: #True goes in
+            model_domain.eval()
+            model.eval()
             acc = model.test_loop_dann(val_loader)
         else:
+            model.eval()
             acc = model.test_loop( val_loader)
         if acc > max_acc : #for baseline and baseline++, we don't use validation in default and we let acc = -1, but we allow options to validate with DB index
             print("best model! save...")
