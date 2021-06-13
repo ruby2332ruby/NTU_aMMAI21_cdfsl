@@ -143,6 +143,7 @@ class MetaTemplate(nn.Module):
         gam = 10
         progress = epoch/(stop_epoch-start_epoch-1)
         lamb = (2 / (1+exp(-gam*progress))) -1
+        lamb_set_forward = 0.0 # portion of set_forward_loss loss
         is_feature = False
         self.record_list = [["Epoch", "Batch", "Loss", "Domain Loss"]]
         for i, ((x1, _), (x2, _)) in enumerate(zip(train_loader[0], train_loader[1])):
@@ -214,16 +215,18 @@ class MetaTemplate(nn.Module):
             correct = predicted.eq(mixed_y_query.data).cpu().sum()
             # loss = cross entropy of classification - lamb * domain binary cross entropy.
             #  The reason why using subtraction is similar to generator loss in disciminator of GAN
-            loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label)
+            loss_set_forward = self.set_forward_loss(x1) + self.set_forward_loss(x2)
+            loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            
             avg_loss = avg_loss+loss.item()
             loss.backward()
             optimizer.step()
             
-            if i % print_freq==0:
+            if i % print_freq==9:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
                 batch_num_mul = min(len(train_loader[0]), len(train_loader[1]))
                 batch_num_mul = batch_num_mul//10 *10
-                print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f} | Domain Loss {:f}'.format(epoch, i, batch_num_mul, avg_loss/float(i+1), avg_loss_domain/float(i+1)))
+                print('Epoch {:d} | Batch {:3d}/{:3d} | Loss {:f} | Domain Loss {:f}'.format(epoch, i+1, batch_num_mul, avg_loss/float(i+1), avg_loss_domain/float(i+1)))
                 
                 self.record_list.append([epoch, i, avg_loss/float(i+1), avg_loss_domain/float(i+1)])
 
