@@ -6,6 +6,7 @@ import numpy as np
 import torch.nn.functional as F
 import utils
 from abc import abstractmethod
+from math import exp
 
 class MetaTemplate(nn.Module):
     def __init__(self, model_func, n_way, n_support, change_way = True, device='cuda:0'):
@@ -135,11 +136,13 @@ class MetaTemplate(nn.Module):
 
     ### my code ###
     #model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain )
-    def train_loop_dann(self, epoch, train_loader, optimizer, optimizer_domain, model_domain, dann_link):
+    def train_loop_dann(self, epoch, start_epoch, stop_epoch, train_loader, optimizer, optimizer_domain, model_domain, dann_link):
         print_freq = 10
         avg_loss=0
         avg_loss_domain=0
-        lamb = 0.7
+        gam = 10
+        progress = epoch/(stop_epoch-start_epoch-1)
+        lamb = (2 / (1+exp(-gam*progress))) -1
         is_feature = False
         self.record_list = [["Epoch", "Batch", "Loss", "Domain Loss"]]
         for i, ((x1, _), (x2, _)) in enumerate(zip(train_loader[0], train_loader[1])):

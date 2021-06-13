@@ -41,7 +41,7 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
         if params.dann: #True goes in
             model_domain.train()
             model.train()
-            model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain, params.dann_link )
+            model.train_loop_dann(epoch, start_epoch, stop_epoch, base_loader,  optimizer, optimizer_domain, model_domain, params.dann_link )
         else:
             model.train()
             model.train_loop(epoch, base_loader,  optimizer )
