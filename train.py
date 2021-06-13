@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "2" #multi gpu: "0,1"
-print("CUDA_VISIBLE_DEVICES 2")
+print("CUDA_VISIBLE_DEVICES: ", os.environ["CUDA_VISIBLE_DEVICES"])
 
 ### my code ###
 import csv
