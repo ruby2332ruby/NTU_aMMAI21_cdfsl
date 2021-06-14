@@ -62,3 +62,26 @@ def get_best_file(checkpoint_dir):
         return best_file
     else:
         return get_resume_file(checkpoint_dir)
+    
+def get_best_file_decoder(checkpoint_dir):    
+    best_file = os.path.join(checkpoint_dir, 'best_model_decoder.tar')
+    # print('best_file: ', best_file)
+    if os.path.isfile(best_file):
+        return best_file
+    else:
+        return get_resume_file_decoder(checkpoint_dir)
+
+def get_assigned_file_decoder(checkpoint_dir,num):
+    assign_file = os.path.join(checkpoint_dir, '{:d}_decoder.tar'.format(num))
+    return assign_file
+
+def get_resume_file_decoder(checkpoint_dir):
+    filelist = glob.glob(os.path.join(checkpoint_dir, '*_decoder.tar'))
+    if len(filelist) == 0:
+        return None
+
+    filelist =  [ x  for x in filelist if os.path.basename(x) != 'best_model_decoder.tar']
+    epochs = np.array([int(os.path.splitext(os.path.basename(x))[0].split("_")[0]) for x in filelist])
+    max_epoch = np.max(epochs)
+    resume_file = os.path.join(checkpoint_dir, '{:d}_decoder.tar'.format(max_epoch))
+    return resume_file
