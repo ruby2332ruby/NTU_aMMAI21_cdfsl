@@ -97,7 +97,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
 
                 x = torch.cat((z_support, psedo_query_set), dim=1)
  
-                loss = pretrained_model.set_forward_loss(x)
+                loss = pretrained_model.set_forward_test(x)
                 loss.backward()
                 delta_opt.step()
 

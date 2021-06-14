@@ -93,15 +93,23 @@ class ProtoNet(MetaTemplate):
         return loss
     
     def set_loss_meanANDcenter(self, x):
-        is_feature = True
+        is_feature = False
         z_support, z_query  = self.parse_feature(x,is_feature)
         z_support   = z_support.contiguous().view(self.n_way, self.n_support, -1 )
         z_proto     = z_support.view(self.n_way, self.n_support, -1 ).mean(1) #the shape of z is [n_data, n_dim]
         z_query     = z_query.contiguous().view(self.n_way, self.n_query, -1 )
         dist_mean = mean_dist(z_support, z_proto, z_query)
         dis_center = center_dist(z_support, z_proto)
-        total_loss = dist_mean + dis_center
+        total_loss = dist_mean + dis_center #
         return total_loss
+    
+    def set_forward_test(self, x):
+        y_query = torch.from_numpy(np.repeat(range( self.n_way ), self.n_query ))
+        y_query = Variable(y_query.cuda())
+
+        scores = self.set_forward(x)
+        loss = self.set_loss_decoder(x) + self.loss_fn(scores, y_query)
+        return loss
 
     def set_forward_loss(self, x):
         y_query = torch.from_numpy(np.repeat(range( self.n_way ), self.n_query ))
@@ -110,7 +118,7 @@ class ProtoNet(MetaTemplate):
         # scores = self.set_forward(x)
         # loss = self.loss_fn(scores, y_query)
         # loss = self.set_loss_decoder(x)
-        loss = self.set_loss_meanANDcenter(x)
+        loss = 0.5*self.set_loss_meanANDcenter(x) + self.set_loss_decoder(x)
         return loss
 
 def euclidean_dist( x, y):
@@ -123,6 +131,7 @@ def euclidean_dist( x, y):
 
     x = x.unsqueeze(1).expand(n, m, d)
     y = y.unsqueeze(0).expand(n, m, d)
+    
 
     return torch.pow(x - y, 2).sum(2) # N x M x D -> N x M
 

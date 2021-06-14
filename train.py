@@ -61,6 +61,8 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
             max_acc = acc
             outfile = os.path.join(params.checkpoint_dir, 'best_model.tar')
             torch.save({'epoch':epoch, 'state':model.state_dict()}, outfile)
+            outfile_dec = os.path.join(params.checkpoint_dir, 'best_model_decoder.tar')
+            torch.save({'epoch':epoch, 'state':model.decoder.state_dict()}, outfile_dec)
             if  params.dann: #True goes in
                 outfile = os.path.join(params.checkpoint_dir, 'best_model_domain.tar')
                 torch.save({'epoch':epoch, 'state':model_domain.state_dict()}, outfile)
@@ -68,6 +70,8 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
         if (epoch % params.save_freq==0) or (epoch==stop_epoch-1):
             outfile = os.path.join(params.checkpoint_dir, '{:d}.tar'.format(epoch))
             torch.save({'epoch':epoch, 'state':model.state_dict()}, outfile)
+            outfile_dec = os.path.join(params.checkpoint_dir, '{:d}_decoder.tar'.format(epoch))
+            torch.save({'epoch':epoch, 'state':model.decoder.state_dict()}, outfile_dec)
             if  params.dann: #True goes in
                 outfile = os.path.join(params.checkpoint_dir, '{:d}_domain.tar'.format(epoch))
                 torch.save({'epoch':epoch, 'state':model_domain.state_dict()}, outfile)
@@ -151,9 +155,11 @@ if __name__=='__main__':
 
     task_path = 'single' if task in ["fsl", "cdfsl-single"] else 'multi'
     params.checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(save_dir, task_path, params.model, params.method)
+    # Decoder
+    params.checkpoint_dir += "_decoder"
     if params.train_aug:
         params.checkpoint_dir += '_aug'
-        
+    
     if params.dann: #True goes in
         params.checkpoint_dir += '_dann_'
         params.checkpoint_dir += params.dann_link

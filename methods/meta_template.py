@@ -143,7 +143,7 @@ class MetaTemplate(nn.Module):
         gam = 10
         progress = epoch/(stop_epoch-start_epoch-1)
         lamb = (2 / (1+exp(-gam*progress))) -1
-        lamb_set_forward = 0.0 # portion of set_forward_loss loss
+        lamb_set_forward = 1.0 # portion of set_forward_loss loss
         is_feature = False
         if epoch == 0:
             self.record_list = [["Epoch", "Batch", "Loss", "Domain Loss"]]
