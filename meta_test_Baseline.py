@@ -17,7 +17,7 @@ from itertools import combinations
 import configs
 import backbone
 from data.datamgr import SimpleDataManager, SetDataManager
-from io_utils import model_dict, parse_args, get_resume_file, get_best_file, get_assigned_file 
+from io_utils import model_dict, parse_args, get_resume_file, get_best_file, get_assigned_file, get_assigned_file_decoder, get_best_file_decoder
 
 from utils import *
 
@@ -50,6 +50,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', freeze_backbone = True, n_
         
         task_path = 'single' if task in ["fsl", "cdfsl-single"] else 'multi'
         checkpoint_dir = '%s/checkpoints/%s/%s_%s' %(configs.save_dir, task_path, params.model, params.method)
+        checkpoint_dir += "_decoder"
         if params.train_aug:
             checkpoint_dir += '_aug'
         if params.dann: #True goes in
@@ -59,13 +60,17 @@ def meta_test(novel_loader, n_query = 15, task='fsl', freeze_backbone = True, n_
         params.save_iter = -1
         if params.save_iter != -1:
             modelfile   = get_assigned_file(checkpoint_dir, params.save_iter)
+            dec_modelfile = get_assigned_file_decoder(checkpoint_dir, params.save_iter)
         elif params.method in ['baseline', 'baseline++'] :
             modelfile   = get_resume_file(checkpoint_dir)
         else:
             modelfile   = get_best_file(checkpoint_dir)
+            dec_modelfile = get_best_file_decoder(checkpoint_dir)
 
         tmp = torch.load(modelfile)
+        tmp_dec = torch.load(dec_modelfile)
         state = tmp['state']
+        state_dec = tmp_dec['state']
         state_keys = list(state.keys())
         for _, key in enumerate(state_keys):
             if "feature." in key:
@@ -74,6 +79,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', freeze_backbone = True, n_
             else:
                 state.pop(key)
         pretrained_model.load_state_dict(state)
+        pretrained_model.decoder.load_state_dict(state_dec)
         
         # train a new linear classifier
         classifier = Classifier(pretrained_model.final_feat_dim, n_way)
