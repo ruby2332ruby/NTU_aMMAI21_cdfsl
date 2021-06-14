@@ -54,6 +54,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', freeze_backbone = True, n_
             checkpoint_dir += '_aug'
         if params.dann: #True goes in
             checkpoint_dir += '_dann'
+            checkpoint_dir += params.dann_link
 
         params.save_iter = -1
         if params.save_iter != -1:
