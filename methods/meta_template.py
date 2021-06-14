@@ -29,6 +29,14 @@ class MetaTemplate(nn.Module):
     @abstractmethod
     def set_forward_loss(self, x):
         pass
+    
+    @abstractmethod
+    def set_forward_test(self, x):
+        pass
+    
+    @abstractmethod
+    def set_forward_original_loss(self, x):
+        pass
 
     def forward(self,x):
         out  = self.feature.forward(x)
@@ -58,6 +66,7 @@ class MetaTemplate(nn.Module):
 
     def train_loop(self, epoch, train_loader, optimizer ):
         print_freq = 10
+        lamb_set_forward_loss = 1.0
 
         avg_loss=0
         for i, (x,_ ) in enumerate(train_loader):
@@ -65,7 +74,7 @@ class MetaTemplate(nn.Module):
             if self.change_way:
                 self.n_way  = x.size(0)
             optimizer.zero_grad()
-            loss = self.set_forward_loss( x )
+            loss = lamb_set_forward_loss * self.set_forward_loss( x ) + self.set_forward_original_loss(x)
             loss.backward()
             optimizer.step()
             avg_loss = avg_loss+loss.item()
