@@ -38,7 +38,7 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
     
     max_acc = 0
     for epoch in range(start_epoch,stop_epoch):
-        print("params.dann", params.dann)
+        #print("params.dann", params.dann)
         if params.dann: #True goes in
             model_domain.train()
             model.train()
