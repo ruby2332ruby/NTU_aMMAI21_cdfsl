@@ -161,7 +161,7 @@ if __name__=='__main__':
     if params.train_aug:
         params.checkpoint_dir += '_aug'
     
-    print("params.dann", params.dann)
+    # print("params.dann", params.dann)
     if params.dann: #True goes in
         params.checkpoint_dir += '_dann_'
         params.checkpoint_dir += params.dann_link
