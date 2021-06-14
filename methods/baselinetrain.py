@@ -8,6 +8,60 @@ import numpy as np
 import torch.nn.functional as F
 from math import exp
 
+class Decoder(nn.Module):
+    def __init__(self, zsize):
+        super(Decoder,self).__init__()
+        self.dfc3 = nn.Linear(zsize, 4096)
+        self.bn3 = nn.BatchNorm1d(4096)
+        self.dfc2 = nn.Linear(4096, 4096)
+        self.bn2 = nn.BatchNorm1d(4096)
+        self.dfc1 = nn.Linear(4096,256 * 6 * 6)
+        self.bn1 = nn.BatchNorm1d(256*6*6)
+        self.upsample1=nn.Upsample(scale_factor=2)
+        self.dconv5 = nn.ConvTranspose2d(256, 256, 3, padding = 0)
+        self.dconv4 = nn.ConvTranspose2d(256, 384, 3, padding = 1)
+        self.dconv3 = nn.ConvTranspose2d(384, 192, 3, padding = 1)
+        self.dconv2 = nn.ConvTranspose2d(192, 64, 5, padding = 2)
+        self.dconv1 = nn.ConvTranspose2d(64, 3, 12, stride = 4, padding = 4)
+
+    def forward(self,x):#,i1,i2,i3):
+        
+        x = self.dfc3(x)
+        #x = F.relu(x)
+        x = F.relu(self.bn3(x))
+        
+        x = self.dfc2(x)
+        x = F.relu(self.bn2(x))
+        #x = F.relu(x)
+        x = self.dfc1(x)
+        x = F.relu(self.bn1(x))
+        #x = F.relu(x)
+        #print(x.size())
+        x = x.view(-1,256,6,6)
+        #print (x.size())
+        x=self.upsample1(x)
+        #print x.size()
+        x = self.dconv5(x)
+        #print x.size()
+        x = F.relu(x)
+        #print x.size()
+        x = F.relu(self.dconv4(x))
+        #print x.size()
+        x = F.relu(self.dconv3(x))
+        #print x.size()		
+        x=self.upsample1(x)
+        #print x.size()		
+        x = self.dconv2(x)
+        #print x.size()		
+        x = F.relu(x)
+        x=self.upsample1(x)
+        #print x.size()
+        x = self.dconv1(x)
+        #print x.size()
+        x = torch.sigmoid(x)
+        return x
+
+
 class BaselineTrain(nn.Module):
     def __init__(self, model_func, num_class, loss_type = 'softmax'):
         super(BaselineTrain, self).__init__()
@@ -23,6 +77,8 @@ class BaselineTrain(nn.Module):
         self.num_class = num_class
         self.loss_fn = nn.CrossEntropyLoss()
         self.top1 = utils.AverageMeter()
+        self.decoder = Decoder(self.feature.final_feat_dim)
+        self.autoencoder_criterion = nn.MSELoss()
         
         ### my code ###
         self.record_list = [["Epoch", "Batch", "Loss", "Top1 Val", "Top1 Avg"]]
@@ -32,6 +88,13 @@ class BaselineTrain(nn.Module):
         out  = self.feature.forward(x)
         scores  = self.classifier.forward(out)
         return scores
+    
+    def set_loss_decoder(self, x):
+        x     = x.contiguous().view( self.n_way * (self.n_support + self.n_query), *x.size()[2:]) 
+        z_all = self.feature.forward(x)
+        x_hat = self.decoder.forward(z_all)
+        loss  = self.autoencoder_criterion(x_hat, x)
+        return loss
 
     def forward_loss(self, x, y):
         y = Variable(y.cuda())
@@ -42,7 +105,10 @@ class BaselineTrain(nn.Module):
         correct = predicted.eq(y.data).cpu().sum()
         self.top1.update(correct.item()*100 / (y.size(0)+0.0), y.size(0))  
 
-        return self.loss_fn(scores, y )
+        loss = self.loss_fn(scores, y )
+        x    = Variable(x.to(self.device))
+        loss += 0.5*self.set_loss_decoder(x)
+        return loss
     
     def train_loop(self, epoch, start_epoch, stop_epoch, train_loader, optimizer):
         print_freq = 10
