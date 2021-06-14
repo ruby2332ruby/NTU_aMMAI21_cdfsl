@@ -64,9 +64,11 @@ class MetaTemplate(nn.Module):
         top1_correct = np.sum(topk_ind[:,0] == y_query)
         return float(top1_correct), len(y_query)
 
-    def train_loop(self, epoch, train_loader, optimizer ):
+    def train_loop(self, epoch, start_epoch, stop_epoch, train_loader, optimizer ):
         print_freq = 10
-        lamb_set_forward_loss = 1.0
+        gam = 10
+        progress = epoch/(stop_epoch-start_epoch-1)
+        lamb_set_forward_loss = ((2 / (1+exp(-gam*progress))) -1)*0.5
 
         avg_loss=0
         for i, (x,_ ) in enumerate(train_loader):

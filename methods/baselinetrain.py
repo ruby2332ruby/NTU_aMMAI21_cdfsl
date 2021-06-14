@@ -44,7 +44,7 @@ class BaselineTrain(nn.Module):
 
         return self.loss_fn(scores, y )
     
-    def train_loop(self, epoch, train_loader, optimizer):
+    def train_loop(self, epoch, start_epoch, stop_epoch, train_loader, optimizer):
         print_freq = 10
         avg_loss=0
         for i, (x,y) in enumerate(train_loader):

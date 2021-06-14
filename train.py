@@ -45,7 +45,7 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
             model.train_loop_dann(epoch, start_epoch, stop_epoch, base_loader,  optimizer, optimizer_domain, model_domain, params.dann_link )
         else:
             model.train()
-            model.train_loop(epoch, base_loader,  optimizer )
+            model.train_loop(epoch, start_epoch, stop_epoch, base_loader,  optimizer )
 
         if not os.path.isdir(params.checkpoint_dir):
             os.makedirs(params.checkpoint_dir)

@@ -129,7 +129,7 @@ class ProtoNet(MetaTemplate):
         # scores = self.set_forward(x)
         # loss = self.loss_fn(scores, y_query)
         # loss = self.set_loss_decoder(x)
-        loss = 0.5*self.set_loss_meanANDcenter(x) + self.set_loss_decoder(x)
+        loss = 0.1*self.set_loss_meanANDcenter(x) + self.set_loss_decoder(x)
         return loss
 
 def euclidean_dist( x, y):
