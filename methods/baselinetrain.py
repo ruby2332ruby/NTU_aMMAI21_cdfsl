@@ -67,7 +67,7 @@ class BaselineTrain(nn.Module):
 
     ### my code ###
     #model.train_loop_dann(epoch, base_loader,  optimizer, optimizer_domain, model_domain )
-    def train_loop_dann(self, epoch, start_epoch, stop_epoch, train_loader, optimizer, optimizer_domain, model_domain):
+    def train_loop_dann(self, epoch, start_epoch, stop_epoch, train_loader, optimizer, optimizer_domain, model_domain, dann_link):
         print_freq = 10
         avg_loss=0
         avg_loss_domain=0

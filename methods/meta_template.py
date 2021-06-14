@@ -209,13 +209,15 @@ class MetaTemplate(nn.Module):
             z1_query     = z1_query.contiguous().view(self.n_way* self.n_query, -1 )
             z2_query     = z2_query.contiguous().view(self.n_way* self.n_query, -1 )
             ### 06/14 ###
-            if dann_link in ["concate"]:
-                dists1 = euclidean_dist_meta(z1_query, mixed_z_proto)
-                dists2 = euclidean_dist_meta(z2_query, mixed_z_proto)
-            elif dann_link in ["parallel"]:
-                dists1 = euclidean_dist_meta(z1_query, z1_proto)
-                dists2 = euclidean_dist_meta(z1_query, z2_proto)
+            #if dann_link in ["concate"]:
+            #    dists1 = euclidean_dist_meta(z1_query, mixed_z_proto)
+            #    dists2 = euclidean_dist_meta(z2_query, mixed_z_proto)
+            #elif dann_link in ["parallel"]:
+            #    dists1 = euclidean_dist_meta(z1_query, z1_proto)
+            #    dists2 = euclidean_dist_meta(z1_query, z2_proto)
             ### 06/14 ###
+            dists1 = euclidean_dist_meta(z1_query, mixed_z_proto)
+            dists2 = euclidean_dist_meta(z2_query, mixed_z_proto)
             scores1 = -dists1
             scores2 = -dists2
             mixed_scores = torch.cat([scores1, scores2], dim=0)
@@ -226,11 +228,11 @@ class MetaTemplate(nn.Module):
             #  The reason why using subtraction is similar to generator loss in disciminator of GAN
             loss_set_forward = self.set_forward_loss(x1) + self.set_forward_loss(x2)
             ### 06/14 ###
-            #loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
-            if dann_link in ["concate"]:
-                loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
-            elif dann_link in ["parallel"]:
-                loss = self.loss_fn(scores1, y1_query) + self.loss_fn(scores2, y2_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            #if dann_link in ["concate"]:
+            #    loss = self.loss_fn(mixed_scores, mixed_y_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
+            #elif dann_link in ["parallel"]:
+            #    loss = self.loss_fn(scores1, y1_query) + self.loss_fn(scores2, y2_query) - lamb * model_domain.loss_fn(domain_logits, domain_label) + loss_set_forward*lamb_set_forward
             ### 06/14 ###
             
             avg_loss = avg_loss+loss.item()

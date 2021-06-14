@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2" #multi gpu: "0,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1" #multi gpu: "0,1"
 print("CUDA_VISIBLE_DEVICES: ", os.environ["CUDA_VISIBLE_DEVICES"])
 
 ### my code ###
@@ -122,7 +122,8 @@ if __name__=='__main__':
         model           = BaselineTrain( model_dict[params.model], params.num_classes)
 
     elif params.method in ['protonet']:
-        n_query = max(1, int(16* params.test_n_way/params.train_n_way)) #if test_n_way is smaller than train_n_way, reduce n_query to keep batch size small
+        n_query = max(1, int(8* params.test_n_way/params.train_n_way)) #if test_n_way is smaller than train_n_way, reduce n_query to keep batch size small
+        #n_query = max(1, int(16* params.test_n_way/params.train_n_way)) #if test_n_way is smaller than train_n_way, reduce n_query to keep batch size small
         train_few_shot_params    = dict(n_way = params.train_n_way, n_support = params.n_shot) 
         test_few_shot_params     = dict(n_way = params.test_n_way, n_support = params.n_shot) 
 
