@@ -110,7 +110,7 @@ class ProtoNet(MetaTemplate):
 
         scores = self.set_forward(x)
         x    = Variable(x.to(self.device))
-        loss = self.set_loss_decoder(x) + self.loss_fn(scores, y_query)
+        loss = 0.5*self.set_loss_decoder(x) + self.loss_fn(scores, y_query)
         return loss
     
     def set_forward_original_loss(self, x):
