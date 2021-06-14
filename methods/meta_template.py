@@ -70,9 +70,9 @@ class MetaTemplate(nn.Module):
             optimizer.step()
             avg_loss = avg_loss+loss.item()
 
-            if i % print_freq==0:
+            if i % print_freq==9:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
-                print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f}'.format(epoch, i, len(train_loader), avg_loss/float(i+1)))
+                print('Epoch {:d} | Batch {:d}/{:d} | Loss {:f}'.format(epoch, i+1, len(train_loader), avg_loss/float(i+1)))
                 
                 ### my code ###
                 self.record_list.append([epoch, i, avg_loss/float(i+1)])

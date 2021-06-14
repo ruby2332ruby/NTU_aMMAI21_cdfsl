@@ -22,7 +22,7 @@ def parse_args(script):
     parser.add_argument('--models_to_use', '--names-list', nargs='+', default=['miniImageNet'], help='pretained model to use')
     parser.add_argument('--fine_tune_all_models'   , action='store_true',  help='fine-tune each model before selection') #still required for save_features.py and test.py to find the model path correctly
     ### my code ###
-    parser.add_argument('--dann'        , default=False, type=bool, help ='Training with our own multi-source training method: Modified DaNN')
+    parser.add_argument('--dann'        , action='store_true', help ='Training with our own multi-source training method: Modified DaNN')
     parser.add_argument('--dann_link'        , default='concate', help='[concate, parallel]')
     ### my code ###
 
