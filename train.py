@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1" #multi gpu: "0,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2" #multi gpu: "0,1"
 print("CUDA_VISIBLE_DEVICES: ", os.environ["CUDA_VISIBLE_DEVICES"])
 
 ### my code ###
@@ -38,6 +38,7 @@ def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch,
     
     max_acc = 0
     for epoch in range(start_epoch,stop_epoch):
+        print("params.dann", params.dann)
         if params.dann: #True goes in
             model_domain.train()
             model.train()
@@ -161,6 +162,7 @@ if __name__=='__main__':
     if params.train_aug:
         params.checkpoint_dir += '_aug'
     
+    print("params.dann", params.dann)
     if params.dann: #True goes in
         params.checkpoint_dir += '_dann_'
         params.checkpoint_dir += params.dann_link
