@@ -118,6 +118,12 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
             scores = pretrained_model.set_forward(x_var.cuda())
         
         y_query = np.repeat(range( n_way ), n_query )
+        if ti == 0:
+            with torch.no_grad():
+                _z_support, z_query  = pretrained_model.parse_feature(x,False)
+                z_query     = z_query.contiguous().view(pretrained_model.n_way* pretrained_model.n_query, -1 )
+                np_z_query = z_query.cpu().detach().numpy()
+            np.savez(checkpoint_dir+"/"+str(task)+"_task0.npz", z_query=np_z_query, label=y_query)
         topk_scores, topk_labels = scores.data.topk(1, 1, True, True)
         topk_ind = topk_labels.cpu().numpy()
 
