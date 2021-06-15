@@ -83,7 +83,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
             ###############################################################################################
             # Finetune components initialization 
             pseudo_q_genrator  = PseudoQeuryGenerator(n_way, n_support,  n_pseudo)
-            delta_opt = torch.optim.Adam(filter(lambda p: p.requires_grad, pretrained_model.parameters()))
+            delta_opt = torch.optim.Adam(set(filter(lambda p: p.requires_grad, pretrained_model.parameters())).union(filter(lambda p: p.requires_grad, pretrained_model.decoder.parameters())))
 
             ###############################################################################################
             # finetune process 
@@ -120,7 +120,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
         y_query = np.repeat(range( n_way ), n_query )
         if ti == 0:
             with torch.no_grad():
-                _z_support, z_query  = pretrained_model.parse_feature(x,False)
+                _z_support, z_query  = pretrained_model.parse_feature(x_var,False)
                 z_query     = z_query.contiguous().view(pretrained_model.n_way* pretrained_model.n_query, -1 )
                 np_z_query = z_query.cpu().detach().numpy()
             np.savez(checkpoint_dir+"/"+str(task)+"_task0.npz", z_query=np_z_query, label=y_query)
