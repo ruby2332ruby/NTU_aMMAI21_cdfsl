@@ -100,7 +100,7 @@ class ProtoNet(MetaTemplate):
         z_query     = z_query.contiguous().view(self.n_way, self.n_query, -1 )
         dist_mean = mean_dist(z_support, z_proto, z_query)
         dis_center = center_dist(z_support, z_proto)
-        total_loss = dist_mean + dis_center
+        total_loss = dist_mean + 0.7*dis_center
         #total_loss = dis_center
         return total_loss
     

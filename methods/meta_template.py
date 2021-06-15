@@ -67,7 +67,12 @@ class MetaTemplate(nn.Module):
     def train_loop(self, epoch, start_epoch, stop_epoch, train_loader, optimizer ):
         print_freq = 10
         gam = 10
-        progress = epoch/(stop_epoch-start_epoch-1)
+        end_ratio = 2/3
+        adaptive_end = int((stop_epoch-start_epoch-1) * end_ratio)
+        if epoch <= adaptive_end:
+            progress = epoch/(stop_epoch-start_epoch-1)
+        else:
+            progress = 1
         lamb_set_forward_loss = ((2 / (1+exp(-gam*progress))) -1)*0.5
 
         avg_loss=0
@@ -152,7 +157,12 @@ class MetaTemplate(nn.Module):
         avg_loss=0
         avg_loss_domain=0
         gam = 10
-        progress = epoch/(stop_epoch-start_epoch-1)
+        end_ratio = 2/3
+        adaptive_end = int((stop_epoch-start_epoch-1) * end_ratio)
+        if epoch <= adaptive_end:
+            progress = epoch/(stop_epoch-start_epoch-1)
+        else:
+            progress = 1
         lamb = (2 / (1+exp(-gam*progress))) -1
         lamb_set_forward = ((2 / (1+exp(-gam*progress))) -1)*0.5 # portion of set_forward_loss loss 
         is_feature = False
