@@ -37,6 +37,11 @@ class MetaTemplate(nn.Module):
     @abstractmethod
     def set_forward_original_loss(self, x):
         pass
+    
+    @abstractmethod
+    def set_loss_decoder(self, x):
+        pass
+    
 
     def forward(self,x):
         out  = self.feature.forward(x)
@@ -76,6 +81,7 @@ class MetaTemplate(nn.Module):
         lamb_set_forward_loss = ((2 / (1+exp(-gam*progress))) -1)*0.5
 
         avg_loss=0
+        avg_loss_dec = 0
         for i, (x,_ ) in enumerate(train_loader):
             self.n_query = x.size(1) - self.n_support           
             if self.change_way:
@@ -85,10 +91,28 @@ class MetaTemplate(nn.Module):
             loss.backward()
             optimizer.step()
             avg_loss = avg_loss+loss.item()
+            
+            # step for decoder part only
+            for p in self.parameters():
+                p.requires_grad = False
+            for name, p in self.named_parameters():
+                if "decoder" in name:
+                    p.requires_grad = True
+                    # print("set decoder true")
+            optimizer.zero_grad()
+            x_var    = Variable(x.to(self.device))
+            loss_decoder = self.set_loss_decoder(x_var)
+            loss_decoder.backward()
+            optimizer.step()
+            avg_loss_dec += loss_decoder.item()
+                    
+            # Update all
+            for p in self.parameters():
+                p.requires_grad = True
 
             if i % print_freq==9:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
-                print('Epoch {:d} | Batch {:3d}/{:3d} | Loss {:f}'.format(epoch, i+1, len(train_loader), avg_loss/float(i+1)))
+                print('Epoch {:3d} | Batch {:3d}/{:3d} | Loss {:9.6f} | Decoder Loss {:9.6f}'.format(epoch, i+1, len(train_loader), avg_loss/float(i+1), avg_loss_dec/float(i+1)), end="\r")
                 
                 ### my code ###
                 self.record_list.append([epoch, i, avg_loss/float(i+1)])
@@ -156,6 +180,7 @@ class MetaTemplate(nn.Module):
         print_freq = 10
         avg_loss=0
         avg_loss_domain=0
+        avg_loss_dec = 0
         gam = 10
         end_ratio = 2/3
         adaptive_end = int((stop_epoch-start_epoch-1) * end_ratio)
@@ -260,11 +285,29 @@ class MetaTemplate(nn.Module):
             loss.backward()
             optimizer.step()
             
+            # step for decoder part only
+            for p in self.parameters():
+                p.requires_grad = False
+            for name, p in self.named_parameters():
+                if "decoder" in name:
+                    p.requires_grad = True
+                    # print("set decoder true")
+            optimizer.zero_grad()
+            x1_var    = Variable(x1.to(self.device))
+            x2_var    = Variable(x2.to(self.device))
+            loss_decoder = self.set_loss_decoder(x1_var) + self.set_loss_decoder(x2_var)
+            loss_decoder.backward()
+            optimizer.step()
+            avg_loss_dec += loss_decoder.item()
+            # Update all
+            for p in self.parameters():
+                p.requires_grad = True
+                
             if i % print_freq==9:
                 #print(optimizer.state_dict()['param_groups'][0]['lr'])
                 batch_num_mul = min(len(train_loader[0]), len(train_loader[1]))
                 batch_num_mul = batch_num_mul//10 *10
-                print('Epoch {:d} | Batch {:3d}/{:3d} | Loss {:f} | Domain Loss {:f}'.format(epoch, i+1, batch_num_mul, avg_loss/float(i+1), avg_loss_domain/float(i+1)))
+                print('Epoch {:3d} | Batch {:3d}/{:3d} | Loss {:9.6f} | Domain Loss {:9.6f}| Decoder Loss {:9.6f}'.format(epoch, i+1, batch_num_mul, avg_loss/float(i+1), avg_loss_domain/float(i+1), avg_loss_dec/float(i+1)), end='\r')
                 
                 self.record_list.append([epoch, i, avg_loss/float(i+1), avg_loss_domain/float(i+1)])
 
