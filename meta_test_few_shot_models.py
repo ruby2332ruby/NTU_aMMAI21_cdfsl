@@ -83,7 +83,7 @@ def meta_test(novel_loader, n_query = 15, task='fsl', finetune=True, n_pseudo=10
             ###############################################################################################
             # Finetune components initialization 
             pseudo_q_genrator  = PseudoQeuryGenerator(n_way, n_support,  n_pseudo)
-            delta_opt = torch.optim.AdamW(set(filter(lambda p: p.requires_grad, pretrained_model.parameters())).union(filter(lambda p: p.requires_grad, pretrained_model.decoder.parameters())), lr=1e-4)
+            delta_opt = torch.optim.Adam(set(filter(lambda p: p.requires_grad, pretrained_model.parameters())).union(filter(lambda p: p.requires_grad, pretrained_model.decoder.parameters())), lr=1e-3)
 
             ###############################################################################################
             # finetune process 

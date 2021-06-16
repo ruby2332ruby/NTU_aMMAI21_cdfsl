@@ -27,7 +27,7 @@ from datasets import miniImageNet_few_shot, cifar100_few_shot
 
 def train(base_loader, val_loader, model, optimization, start_epoch, stop_epoch, params):    
     if optimization == 'Adam':
-        optimizer = torch.optim.AdamW(set(model.parameters()).union(model.decoder.parameters()), lr = 1e-4)
+        optimizer = torch.optim.Adam(set(model.parameters()).union(model.decoder.parameters()), lr = 1e-3)
     else:
        raise ValueError('Unknown optimization, please define by yourself')     
 
